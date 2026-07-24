@@ -1,0 +1,5 @@
+ __        ___
+ \ \      / / |
+  \ \ /\ / /| |  WangJin Framework
+   \ V  V / | |  :: wj-framework :: ${project.version}
+    \_/\_/  |_|

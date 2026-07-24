@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.wangjin</groupId>
+        <artifactId>wj-framework</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>wj-starter-boot</artifactId>
+    <packaging>jar</packaging>
+    <name>wj-starter-boot</name>
+    <description>业务服务默认依赖套餐（core + web + mybatis + security + redis + log + apidoc）</description>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.wangjin</groupId>
+                <artifactId>wj-base-dependencies</artifactId>
+                <version>${revision}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.wangjin</groupId>
+            <artifactId>common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.wangjin</groupId>
+            <artifactId>common-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.wangjin</groupId>
+            <artifactId>common-mybatis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.wangjin</groupId>
+            <artifactId>common-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.wangjin</groupId>
+            <artifactId>common-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.wangjin</groupId>
+            <artifactId>common-log</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.wangjin</groupId>
+            <artifactId>common-apidoc</artifactId>
+        </dependency>
+        <!-- mq 按需引入，不放默认套餐 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+    </dependencies>
+</project>

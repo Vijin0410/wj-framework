@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.wangjin</groupId>
+        <artifactId>wj-common</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>common-mybatis</artifactId>
+    <name>common-mybatis</name>
+    <description>MyBatis-Plus 分页、自动填充、JSON TypeHandler、BaseMapperPlus</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.wangjin</groupId>
+            <artifactId>common-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- 自动填充 createBy 依赖 UserContext；无登录时填 0 -->
+        <dependency>
+            <groupId>com.wangjin</groupId>
+            <artifactId>common-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+    </dependencies>
+</project>
