@@ -10,6 +10,9 @@ public interface SecurityConstants {
     String DETAILS_NICKNAME = "nickname";
     String DETAILS_TENANT_ID = "tenantId";
     String DETAILS_DEPT_ID = "deptId";
+    String DETAILS_DATA_SCOPE = "dataScope";
+    String DETAILS_DATA_SCOPE_DEPTS = "dataScopeDeptIds";
+    String DETAILS_ROLES = "roles";
     String AUTHORITIES_CLAIM_NAME = "authorities";
 
     /** Token 黑名单缓存前缀 */
