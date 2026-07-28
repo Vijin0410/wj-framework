@@ -1,5 +1,5 @@
  __        ___
  \ \      / / |
   \ \ /\ / /| |  WangJin Framework
-   \ V  V / | |  :: wj-framework :: ${project.version}
-    \_/\_/  |_|
+   \ V  V / | |  :: wj-framework Version:: ${project.version}
+    \_/\_/  |_|  :: Spring Boot Version :: ${spring-boot.version}

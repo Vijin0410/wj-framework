@@ -1,0 +1,47 @@
+# wj-starter-boot 默认配置（业务项目同名 key 可覆盖）
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  mvc:
+    throw-exception-if-no-handler-found: true
+    format:
+      date-time: yyyy-MM-dd HH:mm:ss
+      date: yyyy-MM-dd
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  # 优雅停机
+  shutdown: graceful
+
+logging:
+  # 使用 starter 内置 logback-spring.xml
+  config: classpath:logback-spring.xml
+  file:
+    # 相对运行目录；生产可改为绝对路径或环境变量
+    path: logs
+  level:
+    root: info
+    com.wangjin: info
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 15
+
+# 框架自定义配置示例（业务可覆盖）
+wj:
+  security:
+    jwt:
+      # 生产务必修改为 >=32 字节密钥
+      secret: wj-framework-default-secret-key-32b
+      expire-seconds: 7200
+  mybatis:
+    db-type: POSTGRE_SQL
+  apidoc:
+    title: WangJin API
+    version: 1.0.0

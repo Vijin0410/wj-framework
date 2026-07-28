@@ -7,7 +7,7 @@ WangJin 底层框架（对齐 zhyinfo-framework 架构）。**类库工程，无
 ```text
 wj-framework/
 ├── wj-base-dependencies/     # BOM 版本管理
-├── wj-starter-boot/          # 默认依赖套餐
+├── wj-starter-boot/          # 默认依赖套餐 + logback-spring.xml + 默认 yml
 └── wj-common/
     ├── common-core           # Result / BaseEntity / BaseQuery / 工具
     ├── common-web            # 全局异常 / Jackson / 校验 / CORS
@@ -15,9 +15,11 @@ wj-framework/
     ├── common-mybatis         # 分页 / 自动填充 / BaseMapperPlus
     ├── common-security       # JWT / UserContext / SecurityFilterChain
     ├── common-mq             # RabbitMQ JSON 序列化
-    ├── common-log            # @Log 操作日志
+    ├── common-log            # @Log 操作日志（审计，非 Logback）
     └── common-apidoc         # Knife4j OpenAPI
 ```
+
+操作日志迁移差异见 [docs/common-log-migration.md](docs/common-log-migration.md)。
 
 ## 迁移说明（相对 zhyinfo）
 
@@ -81,7 +83,7 @@ wj:
         - /doc.html
         - /v3/api-docs/**
   mybatis:
-    db-type: MYSQL   # 或 POSTGRE_SQL
+    db-type: POSTGRE_SQL   # 或 MYSQL
   apidoc:
     title: My App API
     version: 1.0.0
