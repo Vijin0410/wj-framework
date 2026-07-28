@@ -28,6 +28,17 @@ public class LoginUser implements Serializable {
     private Long tenantId;
     private Long deptId;
     private String tokenId;
+
+    /**
+     * 数据权限范围，见 {@link com.wangjin.common.enums.DataScopeEnum}。
+     * ROOT / ALL 时数据权限拦截器不加额外条件。
+     */
+    private Integer dataScope;
+
+    /** 数据权限可见部门（本部门 / 本部门及子 / 自定义） */
+    @Builder.Default
+    private Set<Long> dataScopeDeptIds = Collections.emptySet();
+
     @Builder.Default
     private Set<String> roles = Collections.emptySet();
     @Builder.Default
