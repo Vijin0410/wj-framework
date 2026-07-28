@@ -25,6 +25,12 @@ public class Option<T> {
         this.label = label;
     }
 
+    public Option(T value, String label, String remark) {
+        this.value = value;
+        this.label = label;
+        this.remark = remark;
+    }
+
     public Option(T value, String label, List<Option<T>> children) {
         this.value = value;
         this.label = label;
