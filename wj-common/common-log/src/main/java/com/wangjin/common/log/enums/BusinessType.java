@@ -5,12 +5,14 @@ package com.wangjin.common.log.enums;
  */
 public enum BusinessType {
     OTHER,
+    SELECT,
     INSERT,
     UPDATE,
     DELETE,
+    GRANT,
     EXPORT,
     IMPORT,
-    GRANT,
     FORCE,
+    GENCODE,
     CLEAN
 }

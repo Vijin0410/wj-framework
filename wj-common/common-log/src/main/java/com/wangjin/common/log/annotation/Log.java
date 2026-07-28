@@ -17,16 +17,24 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Log {
 
-    /** 模块标题 */
+    /** 操作标题 */
     String title() default "";
 
+    /** 业务操作类型 */
     BusinessType businessType() default BusinessType.OTHER;
 
+    /** 操作人类别 */
     OperatorType operatorType() default OperatorType.MANAGE;
 
+    /** 是否保存请求参数 */
     boolean isSaveRequestData() default true;
 
+    /** 是否保存响应结果 */
     boolean isSaveResponseData() default true;
 
+    /** 额外排除的参数字段名 */
     String[] excludeParamNames() default {};
+
+    /** 业务主键 SpEL，如 #id */
+    String bizNo() default "";
 }

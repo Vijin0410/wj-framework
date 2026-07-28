@@ -1,8 +1,7 @@
 package com.wangjin.common.log.model;
 
 /**
- * 操作日志处理器扩展点。
- * 业务侧可实现此接口将日志入库 / 发 MQ。
+ * 操作日志处理扩展点（入库 / 发 MQ 等由业务实现）。
  */
 @FunctionalInterface
 public interface OperLogHandler {
