@@ -2,14 +2,14 @@ package com.wangjin.common.mybatis.handler;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.wangjin.common.constant.GlobalConstants;
+import com.wangjin.common.constant.SystemConstants;
 import com.wangjin.common.security.context.UserContext;
 import org.apache.ibatis.reflection.MetaObject;
 
 import java.time.LocalDateTime;
 
 /**
- * 自动填充 create/update 字段。
- * createBy/updateBy 优先取登录用户，无登录时填 0。
+ * 自动填充 create/update/tenant 字段。
  */
 public class MyMetaObjectHandler implements MetaObjectHandler {
 
@@ -25,13 +25,16 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         strictInsertFill(metaObject, "deleted", Integer.class, GlobalConstants.DELETED_NO);
 
         if (metaObject.hasGetter("tenantId") && getFieldValByName("tenantId", metaObject) == null) {
-            strictInsertFill(metaObject, "tenantId", Long.class, UserContext.getTenantId());
+            Long tenantId = UserContext.getTenantId();
+            if (tenantId == null) {
+                tenantId = SystemConstants.DEFAULT_TENANT_ID;
+            }
+            strictInsertFill(metaObject, "tenantId", Long.class, tenantId);
         }
     }
 
     @Override
     public void updateFill(MetaObject metaObject) {
-        // 更新时强制覆盖 updateTime / updateBy
         setFieldValByName("updateTime", LocalDateTime.now(), metaObject);
         setFieldValByName("updateBy", safeUserId(), metaObject);
     }
