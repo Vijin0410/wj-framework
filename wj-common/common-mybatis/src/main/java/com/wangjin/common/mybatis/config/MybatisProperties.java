@@ -14,7 +14,7 @@ import java.util.List;
 public class MybatisProperties {
 
     /** 数据库类型，见 DbType 名 */
-    private String dbType = "POSTGRE_SQL";
+    private String dbType = "postgresql";
 
     /** 是否启用租户行拦截 */
     private boolean tenantEnabled = true;
