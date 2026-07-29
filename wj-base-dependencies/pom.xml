@@ -60,6 +60,11 @@
             </dependency>
             <dependency>
                 <groupId>com.wangjin</groupId>
+                <artifactId>common-minio</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.wangjin</groupId>
                 <artifactId>wj-starter-boot</artifactId>
                 <version>${revision}</version>
             </dependency>
@@ -109,6 +114,11 @@
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-jackson</artifactId>
                 <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -39,6 +39,7 @@
         <knife4j.version>4.4.0</knife4j.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <jjwt.version>0.12.5</jjwt.version>
+        <minio.version>8.5.17</minio.version>
     </properties>
 
     <build>

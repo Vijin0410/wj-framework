@@ -24,6 +24,7 @@
         <module>common-mq</module>
         <module>common-log</module>
         <module>common-apidoc</module>
+        <module>common-minio</module>
     </modules>
 
     <dependencyManagement>

@@ -46,3 +46,6 @@ Thumbs.db
 logs/
 *.log
 *.class
+
+### MinIO local data ###
+docs/minio-data/

@@ -56,7 +56,7 @@
             <groupId>com.wangjin</groupId>
             <artifactId>common-apidoc</artifactId>
         </dependency>
-        <!-- mq 按需引入，不放默认套餐 -->
+        <!-- mq / minio 按需引入，不放默认套餐 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>

@@ -16,10 +16,13 @@ wj-framework/
     ├── common-security       # JWT / UserContext / SecurityFilterChain
     ├── common-mq             # RabbitMQ JSON 序列化
     ├── common-log            # @Log 操作日志（审计，非 Logback）
-    └── common-apidoc         # Knife4j OpenAPI
+    ├── common-apidoc         # Knife4j OpenAPI
+    └── common-minio           # MinIO 对象存储（按需，不进默认套餐）
 ```
 
-操作日志迁移差异见 [docs/common-log-migration.md](docs/common-log-migration.md)。
+- 操作日志迁移差异：[docs/common-log-migration.md](docs/common-log-migration.md)
+- 文件存储说明：[docs/common-minio.md](docs/common-minio.md)
+- Windows/本地 MinIO 部署：[docs/minio-deploy.md](docs/minio-deploy.md)
 
 ## 迁移说明（相对 zhyinfo）
 
@@ -31,6 +34,7 @@ wj-framework/
 | MP 分页 + 自动填充 | 数据权限（依赖 system-feign） |
 | JWT Security + UserContext | OAuth2 授权服务器 |
 | RabbitMQ 基础配置 | 短信/钉钉/验证码/ES/动态 DDL |
+| MinIO 对象存储（common-minio） | zhyinfo 文档中心（目录/权限/元数据表） |
 
 ## 业务 model 约定
 
@@ -67,6 +71,10 @@ vo      → 出参，可继承 BaseVO
     <groupId>com.wangjin</groupId>
     <artifactId>common-mq</artifactId>
   </dependency>
+  <dependency>
+    <groupId>com.wangjin</groupId>
+    <artifactId>common-minio</artifactId>
+  </dependency>
 </dependencies>
 ```
 
@@ -87,6 +95,15 @@ wj:
   apidoc:
     title: My App API
     version: 1.0.0
+  # 按需：引入 common-minio 后配置（详见 docs/minio-deploy.md）
+  minio:
+    enabled: true
+    endpoint: http://127.0.0.1:9000
+    access-key: minioadmin
+    secret-key: minioadmin
+    bucket: hair-salon
+    public-url: http://127.0.0.1:9000
+    # endpoint-enabled: true   # 可选内置 /api/v1/files 上传接口
 ```
 
 ## 安装
