@@ -13,7 +13,7 @@ spring:
   servlet:
     multipart:
       max-file-size: 10MB
-      max-request-size: 10MB
+      max-request-size: 50MB
 
 server:
   # 优雅停机
@@ -39,7 +39,7 @@ wj:
     jwt:
       # 生产务必修改为 >=32 字节密钥
       secret: wj-framework-default-secret-key-32b
-      expire-seconds: 7200
+      expire-seconds: 86400
   mybatis:
     db-type: POSTGRE_SQL
   apidoc:
