@@ -13,8 +13,7 @@ import java.util.Set;
 /**
  * 租户行处理器：所有未忽略表自动拼 tenant_id = 当前租户。
  * <p>
- * 管理员也走租户过滤（单租户下即默认租户 1 的全量数据）；
- * 跨租户超管若以后需要，可在此对 ROOT 返回 ignore。
+ * 普通用户走租户过滤；系统管理员(ROOT) 跨租户，ignoreTable 对其放行以查看所有租户数据。
  */
 public class WjTenantLineHandler implements TenantLineHandler {
 
@@ -49,6 +48,10 @@ public class WjTenantLineHandler implements TenantLineHandler {
             return true;
         }
         if (tableName == null) {
+            return true;
+        }
+        // 系统管理员(ROOT) 跨租户：不过滤 tenant_id，可查看所有租户数据
+        if (SecurityUtils.isRoot()) {
             return true;
         }
         return ignoreTables.contains(tableName.toLowerCase(Locale.ROOT));
