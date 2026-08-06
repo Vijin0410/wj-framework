@@ -130,7 +130,7 @@ public class DictAspect {
             return;
         }
         // 嵌套 Bean：递归翻译其字段
-        if (BeanUtil.isBean(field.getType()) && !(fieldValue instanceof Map) && !(fieldValue instanceof List)) {
+        if (isNestedBeanField(field.getType(), fieldValue)) {
             try {
                 Map<String, Object> child = translateBean(ReflectUtil.getFieldValue(source, field));
                 item.put(field.getName(), child);
@@ -150,6 +150,24 @@ public class DictAspect {
             }
             return;
         }
+    }
+
+    private boolean isNestedBeanField(Class<?> type, Object fieldValue) {
+        return BeanUtil.isBean(type)
+                && !isSimpleValueType(type)
+                && !(fieldValue instanceof Map)
+                && !(fieldValue instanceof List);
+    }
+
+    private boolean isSimpleValueType(Class<?> type) {
+        return type.isPrimitive()
+                || CharSequence.class.isAssignableFrom(type)
+                || Number.class.isAssignableFrom(type)
+                || Boolean.class == type
+                || Character.class == type
+                || java.util.Date.class.isAssignableFrom(type)
+                || java.time.temporal.Temporal.class.isAssignableFrom(type)
+                || type.isEnum();
     }
 
     private void translateDict(Map<String, Object> item, Field field) {
