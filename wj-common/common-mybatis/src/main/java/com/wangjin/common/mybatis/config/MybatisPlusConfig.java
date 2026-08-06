@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.config.GlobalConfig;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.DataPermissionInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import com.wangjin.common.mybatis.handler.MyMetaObjectHandler;
@@ -29,6 +30,9 @@ public class MybatisPlusConfig {
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+
+        // 乐观锁支持
+        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
 
         // 1. 多租户（先于数据权限）
         if (properties.isTenantEnabled()) {
