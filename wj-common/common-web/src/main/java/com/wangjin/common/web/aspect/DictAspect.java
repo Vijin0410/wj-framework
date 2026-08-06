@@ -119,19 +119,17 @@ public class DictAspect {
 
     @SuppressWarnings("unchecked")
     private void recursion(Map<String, Object> item, Field field, Object source) {
-        Object fieldValue = item.get(field.getName());
-        if (fieldValue == null) {
-            Dict dict = field.getAnnotation(Dict.class);
-            if (dict != null) {
-                translateDict(item, field);
-            }
+        // @Dict 字段优先翻译：标量值（Integer/Long/String 等）直接翻译，避免被嵌套 Bean/List 分支拦截
+        if (field.getAnnotation(Dict.class) != null) {
+            translateDict(item, field);
             return;
         }
-
-        if (BeanUtil.isBean(field.getType())
-                && !Number.class.isAssignableFrom(field.getType())
-                && !(fieldValue instanceof Map)
-                && !(fieldValue instanceof List)) {
+        Object fieldValue = item.get(field.getName());
+        if (fieldValue == null) {
+            return;
+        }
+        // 嵌套 Bean：递归翻译其字段
+        if (BeanUtil.isBean(field.getType()) && !(fieldValue instanceof Map) && !(fieldValue instanceof List)) {
             try {
                 Map<String, Object> child = translateBean(ReflectUtil.getFieldValue(source, field));
                 item.put(field.getName(), child);
@@ -140,7 +138,7 @@ public class DictAspect {
             }
             return;
         }
-
+        // List<Bean>：递归翻译每个元素
         if (field.getType() == List.class && fieldValue instanceof List<?> childList) {
             Type genericType = field.getGenericType();
             if (genericType instanceof ParameterizedType pt) {
@@ -150,10 +148,6 @@ public class DictAspect {
                 }
             }
             return;
-        }
-
-        if (field.getAnnotation(Dict.class) != null) {
-            translateDict(item, field);
         }
     }
 
