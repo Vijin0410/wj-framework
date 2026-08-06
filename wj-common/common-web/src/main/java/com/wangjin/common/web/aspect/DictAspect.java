@@ -128,7 +128,10 @@ public class DictAspect {
             return;
         }
 
-        if (BeanUtil.isBean(field.getType()) && !(fieldValue instanceof Map) && !(fieldValue instanceof List)) {
+        if (BeanUtil.isBean(field.getType())
+                && !Number.class.isAssignableFrom(field.getType())
+                && !(fieldValue instanceof Map)
+                && !(fieldValue instanceof List)) {
             try {
                 Map<String, Object> child = translateBean(ReflectUtil.getFieldValue(source, field));
                 item.put(field.getName(), child);
