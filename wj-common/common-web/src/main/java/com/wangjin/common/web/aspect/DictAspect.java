@@ -10,6 +10,7 @@ import com.wangjin.common.redis.service.RedisService;
 import com.wangjin.common.result.PageResult;
 import com.wangjin.common.result.Result;
 import com.wangjin.common.web.annotation.Dict;
+import com.wangjin.common.web.model.Option;
 import com.wangjin.common.web.util.DictUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -171,12 +172,11 @@ public class DictAspect {
         }
     }
 
-    @SuppressWarnings("rawtypes")
     private String translateDictValue(String dictType, String key, String valueType) {
         if (key == null || "null".equals(key)) {
             return "-";
         }
-        List<Map> dictList = redisService.getCacheList(CacheConstants.SYS_DICT_KEY + dictType);
+        List<?> dictList = redisService.getCacheList(CacheConstants.SYS_DICT_KEY + dictType);
         if (dictList == null || dictList.isEmpty()) {
             return "-";
         }
@@ -186,25 +186,49 @@ public class DictAspect {
                     .forEach(k -> sb.append(dictList.stream()
                                     .filter(d -> {
                                         try {
-                                            return Long.parseLong(String.valueOf(d.get("value"))) == k;
+                                            String value = getDictItemValue(d);
+                                            return value != null && Long.parseLong(value) == k;
                                         } catch (Exception e) {
                                             return false;
                                         }
                                     })
                                     .findFirst()
-                                    .map(d -> String.valueOf(d.get("label")))
+                                    .map(this::getDictItemLabel)
                                     .orElse("-"))
                             .append(SPLIT));
         } else {
             Arrays.stream(key.split(SPLIT)).map(String::trim).filter(StrUtil::isNotBlank)
                     .forEach(k -> sb.append(dictList.stream()
-                                    .filter(d -> Objects.equals(String.valueOf(d.get("value")), k))
+                                    .filter(d -> Objects.equals(getDictItemValue(d), k))
                                     .findFirst()
-                                    .map(d -> String.valueOf(d.get("label")))
+                                    .map(this::getDictItemLabel)
                                     .orElse("-"))
                             .append(SPLIT));
         }
         return sb.toString().endsWith(SPLIT) ? sb.substring(0, sb.length() - 1) : sb.toString();
+    }
+
+    private String getDictItemValue(Object dict) {
+        Object value = getDictItemProperty(dict, "value");
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private String getDictItemLabel(Object dict) {
+        Object label = getDictItemProperty(dict, "label");
+        return label == null ? "-" : String.valueOf(label);
+    }
+
+    private Object getDictItemProperty(Object dict, String propertyName) {
+        if (dict == null) {
+            return null;
+        }
+        if (dict instanceof Option<?> option) {
+            return "value".equals(propertyName) ? option.getValue() : option.getLabel();
+        }
+        if (dict instanceof Map<?, ?> map) {
+            return map.get(propertyName);
+        }
+        return BeanUtil.beanToMap(dict).get(propertyName);
     }
 
     private String translateUserNames(String ids) {

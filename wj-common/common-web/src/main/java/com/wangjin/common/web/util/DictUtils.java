@@ -5,6 +5,7 @@ import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.wangjin.common.constant.CacheConstants;
 import com.wangjin.common.redis.service.RedisService;
+import com.wangjin.common.web.model.Option;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 
@@ -31,16 +32,16 @@ public class DictUtils {
         if (StrUtil.isBlank(keys)) {
             return "";
         }
-        List<Map> dictList = redisService.getCacheList(CacheConstants.SYS_DICT_KEY + dictType);
+        List<?> dictList = redisService.getCacheList(CacheConstants.SYS_DICT_KEY + dictType);
         if (dictList == null || dictList.isEmpty()) {
             return keys;
         }
         StringBuilder sb = new StringBuilder();
         for (String key : keys.split(",")) {
             String label = dictList.stream()
-                    .filter(dict -> Objects.equals(String.valueOf(dict.get("value")), key))
+                    .filter(dict -> Objects.equals(getDictItemValue(dict), key))
                     .findFirst()
-                    .map(dict -> String.valueOf(dict.get("label")))
+                    .map(this::getDictItemLabel)
                     .orElse("-");
             sb.append(label).append(",");
         }
@@ -59,21 +60,44 @@ public class DictUtils {
             return null;
         }
         name = name.trim().replace("、", ",").replace("，", ",");
-        List<Map> dictList = redisService.getCacheList(CacheConstants.SYS_DICT_KEY + dictType);
+        List<?> dictList = redisService.getCacheList(CacheConstants.SYS_DICT_KEY + dictType);
         if (dictList == null || dictList.isEmpty()) {
             return null;
         }
         StringBuilder sb = new StringBuilder();
         for (String k : name.split(",")) {
             String value = dictList.stream()
-                    .filter(dict -> Objects.equals(String.valueOf(dict.get("label")), k))
+                    .filter(dict -> Objects.equals(getDictItemLabel(dict), k))
                     .findFirst()
-                    .map(dict -> String.valueOf(dict.get("value")))
+                    .map(this::getDictItemValue)
                     .orElse("");
             sb.append(value).append(",");
         }
         String result = sb.toString().endsWith(",") ? sb.substring(0, sb.length() - 1) : sb.toString();
         return StrUtil.isBlank(result) ? null : result;
+    }
+
+    private String getDictItemValue(Object dict) {
+        Object value = getDictItemProperty(dict, "value");
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private String getDictItemLabel(Object dict) {
+        Object label = getDictItemProperty(dict, "label");
+        return label == null ? "-" : String.valueOf(label);
+    }
+
+    private Object getDictItemProperty(Object dict, String propertyName) {
+        if (dict == null) {
+            return null;
+        }
+        if (dict instanceof Option<?> option) {
+            return "value".equals(propertyName) ? option.getValue() : option.getLabel();
+        }
+        if (dict instanceof Map<?, ?> map) {
+            return map.get(propertyName);
+        }
+        return BeanUtil.beanToMap(dict).get(propertyName);
     }
 
     public String getDeptNameById(Object deptId) {
