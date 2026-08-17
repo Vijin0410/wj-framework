@@ -4,11 +4,18 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.wangjin.common.constant.CacheConstants;
 import com.wangjin.common.redis.service.RedisService;
 import com.wangjin.common.result.PageResult;
 import com.wangjin.common.result.Result;
+import com.wangjin.common.security.util.SecurityUtils;
 import com.wangjin.common.web.annotation.Dict;
 import com.wangjin.common.web.model.Option;
 import com.wangjin.common.web.util.DictUtils;
@@ -22,11 +29,12 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * {@link com.wangjin.common.web.annotation.QueryDict} 字典翻译切面。
@@ -42,9 +50,20 @@ public class DictAspect {
 
     private static final String SPLIT = ",";
 
+    // ponytail: 独立 ObjectMapper 隔离容器 defaultTyping 污染（RedisConfig:29 的 activateDefaultTyping
+    //   会让 convertValue(Map) 把时间数组首元素当多态 typeId）。ceiling: 时间格式复制自 JacksonConfig，
+    //   改格式需同步；升级路径：抽公共 DateTimeFormatter 常量，或修复注入源后复用容器 ObjectMapper。
+    private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final ObjectMapper MAPPER = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .addModule(new SimpleModule()
+                    .addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DATE_TIME))
+                    .addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DATE_TIME)))
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .build();
+
     private final RedisService redisService;
     private final DictUtils dictUtils;
-    private final ObjectMapper objectMapper;
 
     @Around("@annotation(com.wangjin.common.web.annotation.QueryDict)")
     public Object translation(ProceedingJoinPoint pjp) throws Throwable {
@@ -106,8 +125,8 @@ public class DictAspect {
             return Map.of();
         }
         try {
-            ObjectNode node = objectMapper.valueToTree(data);
-            Map<String, Object> item = objectMapper.convertValue(node, Map.class);
+            ObjectNode node = MAPPER.valueToTree(data);
+            Map<String, Object> item = MAPPER.convertValue(node, Map.class);
             for (Field field : ReflectUtil.getFields(data.getClass())) {
                 recursion(item, field, data);
             }
@@ -179,7 +198,7 @@ public class DictAspect {
         String key = raw == null ? null : String.valueOf(raw);
 
         if (StrUtil.isNotBlank(dict.dictCode())) {
-            String text = translateDictValue(dict.dictCode(), key, dict.valueType());
+            String text = translateDictValue(dict.dictCode(), key);
             item.put(field.getName() + CacheConstants.DICT_KEY_SUFFIX, text);
         }
         if (dict.queryUserName()) {
@@ -190,38 +209,61 @@ public class DictAspect {
         }
     }
 
-    private String translateDictValue(String dictType, String key, String valueType) {
+    /**
+     * 加载字典 Map：通用字典 + 当前租户自定义字典，同 value 租户覆盖通用。
+     * <p>
+     * key 约定见 {@link CacheConstants#SYS_DICT_KEY}；ROOT 只看通用（跨租户管理视角）。
+     */
+    private Map<String, String> loadDictMap(String dictType) {
+        // ponytail: 每次调用查 2 次 Redis（通用 + 租户），同请求多字段同 dictCode 未去重；
+        //   ceiling: 大列表高并发下 Redis 调用翻倍；升级路径：请求级 ThreadLocal 缓存 dictCode -> map。
+        Map<String, String> map = new LinkedHashMap<>();
+        putDictItems(map, redisService.getCacheList(CacheConstants.SYS_DICT_KEY + dictType));
+        String suffix = tenantSuffix();
+        if (suffix != null) {
+            putDictItems(map, redisService.getCacheList(CacheConstants.SYS_DICT_KEY + dictType + suffix));
+        }
+        return map;
+    }
+
+    private void putDictItems(Map<String, String> map, List<?> dictList) {
+        if (dictList == null || dictList.isEmpty()) {
+            return;
+        }
+        for (Object dict : dictList) {
+            String value = getDictItemValue(dict);
+            if (value != null) {
+                map.put(value, getDictItemLabel(dict));
+            }
+        }
+    }
+
+    /** 租户 key 后缀；ROOT 或无租户返回 null（只查通用字典）。 */
+    private String tenantSuffix() {
+        if (SecurityUtils.isRoot()) {
+            return null;
+        }
+        Long tenantId = SecurityUtils.getTenantId();
+        return tenantId == null ? null : ":" + tenantId;
+    }
+
+    private String translateDictValue(String dictType, String key) {
+        // ponytail: 统一 String 匹配。ceiling: 放弃原 long 分支的前导零兼容（"01" 匹配 "1"），
+        //   字典 value 应为规范数字串；若出现前导零，再加 long 回退遍历。
         if (key == null || "null".equals(key)) {
             return "-";
         }
-        List<?> dictList = redisService.getCacheList(CacheConstants.SYS_DICT_KEY + dictType);
-        if (dictList == null || dictList.isEmpty()) {
+        Map<String, String> dictMap = loadDictMap(dictType);
+        if (dictMap.isEmpty()) {
             return "-";
         }
         StringBuilder sb = new StringBuilder();
-        if ("long".equals(valueType)) {
-            Arrays.stream(key.split(SPLIT)).map(String::trim).filter(StrUtil::isNotBlank).mapToLong(Long::parseLong)
-                    .forEach(k -> sb.append(dictList.stream()
-                                    .filter(d -> {
-                                        try {
-                                            String value = getDictItemValue(d);
-                                            return value != null && Long.parseLong(value) == k;
-                                        } catch (Exception e) {
-                                            return false;
-                                        }
-                                    })
-                                    .findFirst()
-                                    .map(this::getDictItemLabel)
-                                    .orElse("-"))
-                            .append(SPLIT));
-        } else {
-            Arrays.stream(key.split(SPLIT)).map(String::trim).filter(StrUtil::isNotBlank)
-                    .forEach(k -> sb.append(dictList.stream()
-                                    .filter(d -> Objects.equals(getDictItemValue(d), k))
-                                    .findFirst()
-                                    .map(this::getDictItemLabel)
-                                    .orElse("-"))
-                            .append(SPLIT));
+        for (String k : key.split(SPLIT)) {
+            String trimmed = k.trim();
+            if (StrUtil.isBlank(trimmed)) {
+                continue;
+            }
+            sb.append(dictMap.getOrDefault(trimmed, "-")).append(SPLIT);
         }
         return sb.toString().endsWith(SPLIT) ? sb.substring(0, sb.length() - 1) : sb.toString();
     }
