@@ -144,14 +144,19 @@ public class DictAspect {
             translateDict(item, field);
             return;
         }
-        Object fieldValue = item.get(field.getName());
+        // 尊重 Jackson 忽略的字段，避免递归时重新写入不应出现在响应中的对象。
+        if (!item.containsKey(field.getName())) {
+            return;
+        }
+        // 从原始 VO 读取嵌套值，序列化后的 Map 已丢失字段上的 @Dict 注解。
+        Object fieldValue = ReflectUtil.getFieldValue(source, field);
         if (fieldValue == null) {
             return;
         }
         // 嵌套 Bean：递归翻译其字段
         if (isNestedBeanField(field.getType(), fieldValue)) {
             try {
-                Map<String, Object> child = translateBean(ReflectUtil.getFieldValue(source, field));
+                Map<String, Object> child = translateBean(fieldValue);
                 item.put(field.getName(), child);
             } catch (Exception ignored) {
                 // keep original
