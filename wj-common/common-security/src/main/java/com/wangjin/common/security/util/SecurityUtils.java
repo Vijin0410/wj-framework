@@ -4,6 +4,7 @@ import com.wangjin.common.constant.GlobalConstants;
 import com.wangjin.common.constant.SystemConstants;
 import com.wangjin.common.enums.DataScopeEnum;
 import com.wangjin.common.security.context.LoginUser;
+import com.wangjin.common.security.context.TenantContext;
 import com.wangjin.common.security.context.UserContext;
 
 import java.util.Collections;
@@ -30,9 +31,13 @@ public final class SecurityUtils {
     }
 
     /**
-     * 当前租户；无登录时回落默认租户（便于启动灌库 / 匿名任务）。
+     * 当前操作租户优先于登录租户；均未设置时回落默认租户。
      */
     public static Long getTenantId() {
+        Long scopedTenantId = TenantContext.getTenantId();
+        if (scopedTenantId != null) {
+            return scopedTenantId;
+        }
         Long tenantId = UserContext.getTenantId();
         return tenantId == null ? SystemConstants.DEFAULT_TENANT_ID : tenantId;
     }

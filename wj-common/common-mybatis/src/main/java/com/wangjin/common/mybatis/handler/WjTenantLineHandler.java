@@ -2,6 +2,7 @@ package com.wangjin.common.mybatis.handler;
 
 import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.wangjin.common.mybatis.config.MybatisProperties;
+import com.wangjin.common.security.context.TenantContext;
 import com.wangjin.common.security.util.SecurityUtils;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
@@ -13,7 +14,7 @@ import java.util.Set;
 /**
  * 租户行处理器：所有未忽略表自动拼 tenant_id = 当前租户。
  * <p>
- * 普通用户走租户过滤；系统管理员(ROOT) 跨租户，ignoreTable 对其放行以查看所有租户数据。
+ * 显式租户作用域对所有身份生效；未设置作用域时保留既有 ROOT 跨租户行为。
  */
 public class WjTenantLineHandler implements TenantLineHandler {
 
@@ -50,8 +51,8 @@ public class WjTenantLineHandler implements TenantLineHandler {
         if (tableName == null) {
             return true;
         }
-        // 系统管理员(ROOT) 跨租户：不过滤 tenant_id，可查看所有租户数据
-        if (SecurityUtils.isRoot()) {
+        // 显式作用域优先，是否允许建立作用域由接入项目授权。
+        if (SecurityUtils.isRoot() && TenantContext.getTenantId() == null) {
             return true;
         }
         return ignoreTables.contains(tableName.toLowerCase(Locale.ROOT));

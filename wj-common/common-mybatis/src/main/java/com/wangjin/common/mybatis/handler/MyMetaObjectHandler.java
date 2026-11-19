@@ -2,8 +2,8 @@ package com.wangjin.common.mybatis.handler;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.wangjin.common.constant.GlobalConstants;
-import com.wangjin.common.constant.SystemConstants;
 import com.wangjin.common.security.context.UserContext;
+import com.wangjin.common.security.util.SecurityUtils;
 import org.apache.ibatis.reflection.MetaObject;
 
 import java.time.LocalDateTime;
@@ -25,10 +25,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         strictInsertFill(metaObject, "deleted", Integer.class, GlobalConstants.DELETED_NO);
 
         if (metaObject.hasGetter("tenantId") && getFieldValByName("tenantId", metaObject) == null) {
-            Long tenantId = UserContext.getTenantId();
-            if (tenantId == null) {
-                tenantId = SystemConstants.DEFAULT_TENANT_ID;
-            }
+            Long tenantId = SecurityUtils.getTenantId();
             strictInsertFill(metaObject, "tenantId", Long.class, tenantId);
         }
     }

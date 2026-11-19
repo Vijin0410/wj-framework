@@ -6,6 +6,7 @@ import com.wangjin.common.redis.service.RedisService;
 import com.wangjin.common.result.PageResult;
 import com.wangjin.common.result.Result;
 import com.wangjin.common.security.context.LoginUser;
+import com.wangjin.common.security.context.TenantContext;
 import com.wangjin.common.security.context.UserContext;
 import com.wangjin.common.web.annotation.Dict;
 import com.wangjin.common.web.model.Option;
@@ -42,7 +43,18 @@ class DictAspectTest {
 
     @AfterEach
     void clearContext() {
+        TenantContext.clear();
         UserContext.clear();
+    }
+
+    @Test
+    void rootScopeUsesTenantDictionaryOverrides() throws Throwable {
+        doReturn(List.of(new Option<>("1", "租户现金")))
+                .when(redis).getCacheList(CacheConstants.SYS_DICT_KEY + "pay_method:77");
+        try (TenantContext.Scope scope = TenantContext.use(77L)) {
+            Map<?, ?> data = resultData(Result.success(new Payment(1)));
+            assertEquals("租户现金", data.get("payMethod_text"));
+        }
     }
 
     @Test

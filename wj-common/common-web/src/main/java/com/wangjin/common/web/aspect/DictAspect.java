@@ -16,6 +16,7 @@ import com.wangjin.common.redis.service.RedisService;
 import com.wangjin.common.result.PageResult;
 import com.wangjin.common.result.Result;
 import com.wangjin.common.security.util.SecurityUtils;
+import com.wangjin.common.security.context.TenantContext;
 import com.wangjin.common.web.annotation.Dict;
 import com.wangjin.common.web.model.Option;
 import com.wangjin.common.web.util.DictUtils;
@@ -217,7 +218,7 @@ public class DictAspect {
     /**
      * 加载字典 Map：通用字典 + 当前租户自定义字典，同 value 租户覆盖通用。
      * <p>
-     * key 约定见 {@link CacheConstants#SYS_DICT_KEY}；ROOT 只看通用（跨租户管理视角）。
+     * key 约定见 {@link CacheConstants#SYS_DICT_KEY}；显式租户作用域使用对应租户覆盖。
      */
     private Map<String, String> loadDictMap(String dictType) {
         // ponytail: 每次调用查 2 次 Redis（通用 + 租户），同请求多字段同 dictCode 未去重；
@@ -243,9 +244,9 @@ public class DictAspect {
         }
     }
 
-    /** 租户 key 后缀；ROOT 或无租户返回 null（只查通用字典）。 */
+    /** 租户 key 后缀；未建立作用域的 ROOT 保持只查通用字典。 */
     private String tenantSuffix() {
-        if (SecurityUtils.isRoot()) {
+        if (SecurityUtils.isRoot() && TenantContext.getTenantId() == null) {
             return null;
         }
         Long tenantId = SecurityUtils.getTenantId();

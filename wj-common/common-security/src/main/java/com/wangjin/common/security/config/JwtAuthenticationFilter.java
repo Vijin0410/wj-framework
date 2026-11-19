@@ -3,6 +3,7 @@ package com.wangjin.common.security.config;
 import cn.hutool.core.util.StrUtil;
 import com.wangjin.common.constant.SecurityConstants;
 import com.wangjin.common.security.context.LoginUser;
+import com.wangjin.common.security.context.TenantContext;
 import com.wangjin.common.security.context.UserContext;
 import com.wangjin.common.security.util.JwtUtils;
 import io.jsonwebtoken.Claims;
@@ -59,6 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } finally {
+            TenantContext.clear();
             UserContext.clear();
             SecurityContextHolder.clearContext();
         }
